@@ -112,8 +112,7 @@ def analyze_user_query(user_query):
     )
 
     response = client.chat.completions.create(
-        model="deepseek/deepseek-r1-distill-qwen-32b:free",
-        n=1,
+        model="deepseek/deepseek-r1:free",
         messages=[
             {"role": "system", "content": system_prompt},
             {
@@ -136,8 +135,7 @@ def llm_call(prompt, issue_context):
     )
 
     response = client.chat.completions.create(
-        model="deepseek/deepseek-r1-distill-qwen-32b:free",
-        n=1,
+        model="deepseek/deepseek-r1:free",
         messages=[
             {"role": "system", "content": prompt},
             {

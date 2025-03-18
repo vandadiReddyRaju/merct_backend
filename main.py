@@ -104,15 +104,15 @@ def analyze_user_query(user_query):
     Analyzes the user query and classifies it into one of the predefined categories.
     """
     print("statred")
-    api_key = os.getenv("API_KEY")
+    api_key = os.getenv("API_KEY_O")
     system_prompt = get_query_classification_prompt()
     client = OpenAI(
         api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        base_url="https://openrouter.ai/api/v1"
     )
 
     response = client.chat.completions.create(
-        model="gemini-2.0-flash-exp",
+        model="deepseek/deepseek-r1-distill-qwen-32b:free",
         n=1,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -129,14 +129,14 @@ def analyze_user_query(user_query):
 
 def llm_call(prompt, issue_context):
     print("calling API 1")
-    api_key = os.getenv("API_KEY")
+    api_key = os.getenv("API_KEY_O")
     client = OpenAI(
         api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        base_url="https://openrouter.ai/api/v1"
     )
 
     response = client.chat.completions.create(
-        model="gemini-2.0-flash-exp",
+        model="deepseek/deepseek-r1-distill-qwen-32b:free",
         n=1,
         messages=[
             {"role": "system", "content": prompt},

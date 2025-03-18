@@ -8,6 +8,7 @@ import zipfile
 from werkzeug.utils import secure_filename
 from openai import OpenAI
 from dotenv import load_dotenv
+import uvicorn
 
 from prompts import (
     conceptual_doubt_prompt,

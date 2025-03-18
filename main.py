@@ -14,7 +14,8 @@ from prompts import (
     get_test_cases_qr_v0_prompt,
     get_specific_errors_qr_v0_prompt,
     get_publishing_related_query_system_prompt,
-    get_ide_related_queries_system_prompt
+    get_ide_related_queries_system_prompt,
+    get_query_classification_prompt
 )
 
 app = Flask(__name__)
@@ -102,23 +103,7 @@ def analyze_user_query(user_query):
     """
     print("statred")
     api_key = os.getenv("API_KEY")
-    system_prompt = """ As a helpful coding mentor , Your current task is to first summarize the user query in detail and then classify user query in following categories, You would recieve user query along with images they have shared related to query, Assume you've access to user code as well. Here are the valid categories you can classify into:
-    <Test case failures> - Query related to test case/s or specific test cases are failing.
-    <Mistakes Explanation> - Query about identifying a mistake in the code or Assistance with resolving a specific error messags (or messages) or issue (or issues) in the code.
-    <Unexpected output> - Query problem relate to where the code produces output that differs from the expected result.
-    <Implementation guidance>	- Query Requesting for help on how to implement a particular feature or functionality. And also query about on the Guidance and approach of the question problem or how to break down the problem.
-    <Conceptual doubts> - Query about underlying concepts or theories related to coding or conceptual doubts either in general or question specific.
-    <Code publishing issue> - This includes the queries where user is not able publish the code.
-    <IDE issue> - We've given custom IDE to users so they sometimes IDE specific issues, This includes the cases where user is facing trouble in installing few things in ide, setting up a new workspace in ide facing no space error in IDE etc.
-    <Other> - If the query doesn't fit in any of the above categories.
-
-    Remeber the github and git issues should be classified in Conceptual doubts category instead of Code publishing issue category
-    Make sure you don't miss any critical detail in summarizing the user query and be as thorough as possible, and also add a valid and detailed decription of error like if its present. Don't add any explnation or solution for error add error description as per what user has shared  and be extremely careful and classify the query accurately in one of the categories, if you're confused then classify into <Other> category .
-    Reply in following format only and remeber to always return a valid json
-    {"user_query_summary":"//Add summary here", "error_description":"//Add detailed error description here , if any error is shared by user" ,"query_category" : "//Add category here"}
-
-    Only reply with a valid json nothing else
-    """
+    system_prompt = get_query_classification_prompt()
     client = OpenAI(
         api_key=api_key,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
@@ -162,6 +147,10 @@ def llm_call(prompt, issue_context):
     res = response.choices[0].message.content
     print(res)
     return (res)
+
+@app.route("/")
+def home():
+    return "Hello, Render!"
 
 @app.route('/api/process', methods=['POST'])
 def process_query():
@@ -252,5 +241,7 @@ def process_query():
         # Handle any unexpected errors
         return jsonify({"response": str(e)}), 500
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use Render's PORT or default to 5000
+    app.run(host="0.0.0.0", port=port)

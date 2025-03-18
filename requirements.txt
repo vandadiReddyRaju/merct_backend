@@ -10,3 +10,4 @@ dotenv
 python-dotenv
 fastapi
 uvicorn
+gunicorn==20.1.0

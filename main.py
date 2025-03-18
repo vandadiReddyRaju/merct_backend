@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from fastapi import FastAPI
 import json
 import os
 import pandas as pd
@@ -242,6 +243,5 @@ def process_query():
         return jsonify({"response": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    port = int(os.environ.get("PORT", 5000))  # Use Render's PORT or default to 5000
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8000))  # Use Render's PORT or default to 8000
+    uvicorn.run("main:app", host="0.0.0.0", port=port)

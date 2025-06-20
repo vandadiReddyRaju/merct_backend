@@ -6,7 +6,7 @@ import os
 import pandas as pd
 import zipfile
 from werkzeug.utils import secure_filename
-from openai import OpenAI
+import requests
 from dotenv import load_dotenv
 import uvicorn
 
@@ -99,54 +99,50 @@ def extract_user_code(zip_path):
         print(f"Error extracting user code: {e}")
         return None
 
+def llm_call(system_prompt, user_prompt):
+    print("Calling Deepseek API")
+
+    # Prepare messages as required by the API.
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    print("system_prompt", system_prompt)
+    print("user_prompt", user_prompt)
+    request_body = {
+        "messages": messages,
+        "model": "DEEPSEEK-REASONER", # Specify the valid model
+        "temperature": 0.0
+    }
+
+    # Instantiate the OpenAI client with the proper endpoint and API key.
+    request_url = os.getenv("REQUEST_URL")
+    api_key = os.getenv("API_KEY")
+
+    # Send the request and get the response.
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
+
+    response = requests.post(request_url, headers=headers, json=request_body)
+
+    # Convert response to JSON and extract the assistant's message.
+    data = response.json()
+    res_text = data["choices"][0]["message"]["content"]
+    return res_text
+
 def analyze_user_query(user_query):
     """
     Analyzes the user query and classifies it into one of the predefined categories.
     """
     print("statred")
-    api_key = os.getenv("API_KEY")
     system_prompt = get_query_classification_prompt()
-    client = OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
-
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash-exp",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": user_query
-            }
-        ]
-    )
-    result = response.choices[0].message.content
+    result = llm_call(system_prompt, user_query)
     result = json.loads(result.replace("```json","").replace("```",""))
     print(result)
     return result
-
-def llm_call(prompt, issue_context):
-    print("calling API 1")
-    api_key = os.getenv("API_KEY")
-    client = OpenAI(
-        api_key=api_key,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
-
-    response = client.chat.completions.create(
-        model="gemini-2.0-flash-exp",
-        messages=[
-            {"role": "system", "content": prompt},
-            {
-                "role": "user",
-                "content": issue_context
-            }
-        ]
-    )
-    res = response.choices[0].message.content
-    print(res)
-    return (res)
 
 @app.route("/")
 def home():
@@ -230,9 +226,6 @@ def process_query():
 
         else:
             response = "<mentor_required>"
-
-        # Call the LLM with the prompt and issue context
-        
 
         # Return the response as JSON
         return jsonify({"response": response}), 200
